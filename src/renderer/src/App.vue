@@ -5,7 +5,7 @@ import { ref } from 'vue'
 const path = ref<string>()
 
 const selectFolder = async (): Promise<void> => {
-  const selectedPath = await window.electronAPI.selectFolder()
+  const selectedPath = await window.api.selectFolder()
   if (selectedPath) path.value = selectedPath
 }
 </script>
