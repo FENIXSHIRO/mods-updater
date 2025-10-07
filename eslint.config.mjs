@@ -1,8 +1,8 @@
-import { defineConfig } from 'eslint/config'
-import tseslint from '@electron-toolkit/eslint-config-ts'
-import eslintConfigPrettier from '@electron-toolkit/eslint-config-prettier'
-import eslintPluginVue from 'eslint-plugin-vue'
-import vueParser from 'vue-eslint-parser'
+import { defineConfig } from 'eslint/config';
+import tseslint from '@electron-toolkit/eslint-config-ts';
+import eslintConfigPrettier from '@electron-toolkit/eslint-config-prettier';
+import eslintPluginVue from 'eslint-plugin-vue';
+import vueParser from 'vue-eslint-parser';
 
 export default defineConfig(
   { ignores: ['**/node_modules', '**/dist', '**/out'] },
@@ -14,12 +14,12 @@ export default defineConfig(
       parser: vueParser,
       parserOptions: {
         ecmaFeatures: {
-          jsx: true
+          jsx: true,
         },
         extraFileExtensions: ['.vue'],
-        parser: tseslint.parser
-      }
-    }
+        parser: tseslint.parser,
+      },
+    },
   },
   {
     files: ['**/*.{ts,mts,tsx,vue}'],
@@ -29,10 +29,7 @@ export default defineConfig(
       'vue/component-options-name-casing': 'error',
       'vue/custom-event-name-casing': 'error',
       'vue/define-emits-declaration': 'error',
-      'vue/define-macros-order': [
-        'error',
-        { order: ['defineOptions', 'defineProps', 'defineEmits', 'defineSlots'] }
-      ],
+      'vue/define-macros-order': ['error', { order: ['defineOptions', 'defineProps', 'defineEmits', 'defineSlots'] }],
       'vue/define-props-declaration': 'error',
       'vue/html-button-has-type': ['error', { button: true, submit: true, reset: true }],
       'vue/html-comment-content-spacing': ['error', 'always', { exceptions: [] }],
@@ -69,8 +66,8 @@ export default defineConfig(
       'vue/v-for-delimiter-style': 'error',
       'vue/v-on-handler-style': 'off',
       'vue/valid-define-options': 'error',
-      'vue/block-lang': ['error', { script: { lang: 'ts' } }]
-    }
+      'vue/block-lang': ['error', { script: { lang: 'ts' } }],
+    },
   },
   eslintConfigPrettier
-)
+);

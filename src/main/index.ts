@@ -1,9 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import fs from 'fs/promises'
-import crypto from 'crypto'
-import icon from '../../resources/icon.png?asset'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron';
+import { join } from 'path';
+import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import fs from 'fs/promises';
+import crypto from 'crypto';
+import icon from '../../resources/icon.png?asset';
 
 function createWindow(): void {
   // Create the browser window.
@@ -15,25 +15,25 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  })
+      sandbox: false,
+    },
+  });
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
+    mainWindow.show();
+  });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
+    shell.openExternal(details.url);
+    return { action: 'deny' };
+  });
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
 }
 
@@ -42,60 +42,71 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.electron');
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
+    optimizer.watchWindowShortcuts(window);
+  });
 
   ipcMain.handle('select-folder', async () => {
-    const { filePaths } = await dialog.showOpenDialog({ properties: ['openDirectory'] })
-    return filePaths.length ? filePaths[0] : null
-  })
+    const { filePaths } = await dialog.showOpenDialog({ properties: ['openDirectory'] });
+    return filePaths.length ? filePaths[0] : null;
+  });
 
   ipcMain.handle('download-manifest', async (_event, dir) => {
-    if (!dir) return { error: 'No directory selected' }
+    if (!dir) return { error: 'No directory selected' };
 
-    const files = await fs.readdir(dir)
-    const manifest = {}
+    try {
+      const files = await fs.readdir(dir, { withFileTypes: true });
+      const manifest = {};
 
-    for (const file of files) {
-      const data = await fs.readFile(`${dir}/${file}`)
-      manifest[file] = crypto.createHash('sha256').update(data).digest('hex')
+      // Используем Promise.all для параллельного хеширования
+      await Promise.all(
+        files
+          .filter((dirent) => dirent.isFile())
+          .map(async (dirent) => {
+            const filePath = `${dir}/${dirent.name}`;
+            const data = await fs.readFile(filePath);
+            manifest[dirent.name] = crypto.createHash('sha256').update(data).digest('hex');
+          })
+      );
+
+      const { filePath } = await dialog.showSaveDialog({
+        defaultPath: 'manifest.json',
+        filters: [{ name: 'JSON Files', extensions: ['json'] }],
+      });
+
+      if (filePath) {
+        await fs.writeFile(filePath, JSON.stringify(manifest, null, 2));
+        return { success: true, filePath };
+      }
+      return { error: 'Download cancelled' };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { error: `Failed to create manifest: ${message}` };
     }
+  });
 
-    const { filePath } = await dialog.showSaveDialog({
-      defaultPath: 'manifest.json',
-      filters: [{ name: 'JSON Files', extensions: ['json'] }]
-    })
-
-    if (filePath) {
-      await fs.writeFile(filePath, JSON.stringify(manifest, null, 2))
-      return { success: true, filePath }
-    }
-    return { error: 'Download cancelled' }
-  })
-
-  createWindow()
+  createWindow();
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-})
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit()
+    app.quit();
   }
-})
+});
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

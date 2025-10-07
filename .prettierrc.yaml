@@ -4,3 +4,5 @@ printWidth: 120
 trailingComma: es5
 vueIndentScriptAndStyle: true
 tabWidth: 2
+endOfLine: crlf
+
