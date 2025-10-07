@@ -1,6 +1,8 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import fs from 'fs/promises'
+import crypto from 'crypto'
 import icon from '../../resources/icon.png?asset'
 
 function createWindow(): void {
@@ -49,15 +51,32 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
   ipcMain.handle('select-folder', async () => {
-    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
-    if (!result.canceled) {
-      return result.filePaths[0]
+    const { filePaths } = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+    return filePaths.length ? filePaths[0] : null
+  })
+
+  ipcMain.handle('download-manifest', async (_event, dir) => {
+    if (!dir) return { error: 'No directory selected' }
+
+    const files = await fs.readdir(dir)
+    const manifest = {}
+
+    for (const file of files) {
+      const data = await fs.readFile(`${dir}/${file}`)
+      manifest[file] = crypto.createHash('sha256').update(data).digest('hex')
     }
-    return null
+
+    const { filePath } = await dialog.showSaveDialog({
+      defaultPath: 'manifest.json',
+      filters: [{ name: 'JSON Files', extensions: ['json'] }]
+    })
+
+    if (filePath) {
+      await fs.writeFile(filePath, JSON.stringify(manifest, null, 2))
+      return { success: true, filePath }
+    }
+    return { error: 'Download cancelled' }
   })
 
   createWindow()

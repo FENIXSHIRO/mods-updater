@@ -5,6 +5,11 @@ declare global {
     electron: ElectronAPI
     api: {
       selectFolder: () => Promise<string | null>
+      downloadManifest: (dir: string) => Promise<{
+        success: boolean
+        filePath: string
+        error: string
+      }>
     }
   }
 }

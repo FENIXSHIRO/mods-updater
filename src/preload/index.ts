@@ -3,7 +3,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  selectFolder: () => ipcRenderer.invoke('select-folder')
+  selectFolder: () => ipcRenderer.invoke('select-folder'),
+  downloadManifest: (dir) => ipcRenderer.invoke('download-manifest', dir)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
