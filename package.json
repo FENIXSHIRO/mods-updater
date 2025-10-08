@@ -20,6 +20,23 @@
     "build:mac": "npm run build && electron-builder --mac",
     "build:linux": "npm run build && electron-builder --linux"
   },
+  "build": {
+    "appId": "fxshiro-updater",
+    "productName": "Mods updater",
+    "win": {
+      "target": "portable"
+    },
+    "files": [
+      "out/**/*",
+      "config.json"
+    ],
+    "extraFiles": [
+      {
+        "from": "config.json",
+        "to": "config.json"
+      }
+    ]
+  },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",

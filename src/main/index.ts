@@ -1,10 +1,25 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron';
 import { join } from 'path';
+import { readFile } from 'fs/promises';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import axios from 'axios';
 import icon from '../../resources/icon.png?asset';
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+async function loadConfig() {
+  if (is.dev) return { SERVER_URL: 'http://192.168.31.96:21010' };
+  try {
+    // Путь к config.json относительно portable-исполняемого файла
+    const configPath = join(app.getPath('exe'), '../config.json');
+    const configData = await readFile(configPath, 'utf-8');
+    return JSON.parse(configData);
+  } catch (error) {
+    console.error('Failed to load config:', error);
+    return { SERVER_URL: '' }; // Резервное значение
+  }
+}
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -82,7 +97,10 @@ async function compareLocalFilesWithManifest(
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  const config = await loadConfig();
+  const SERVER_URL = config.SERVER_URL;
+
   electronApp.setAppUserModelId('com.electron');
 
   app.on('browser-window-created', (_, window) => {
@@ -95,8 +113,9 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('check-server-availability', async () => {
+    if (!SERVER_URL) return { error: 'Server URL not defined' };
     try {
-      const response = await axios.get('http://192.168.31.96:21010', { timeout: 5000 });
+      const response = await axios.get(SERVER_URL, { timeout: 5000 });
       if (response.status === 200) {
         return { success: true };
       }
@@ -142,9 +161,9 @@ app.whenReady().then(() => {
 
   ipcMain.handle('compare-files', async (_event, dir) => {
     if (!dir) return { error: 'No directory selected' };
-
+    if (!SERVER_URL) return { error: 'Server URL not defined' };
     try {
-      const response = await axios.get('http://192.168.31.96:21010/manifest.json');
+      const response = await axios.get(`${SERVER_URL}/manifest.json`);
       const serverManifest = response.data;
 
       const compareResult = await compareLocalFilesWithManifest(dir, serverManifest);
@@ -168,10 +187,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('sync-files', async (_event, dir) => {
     if (!dir) return { error: 'No directory selected' };
-
+    if (!SERVER_URL) return { error: 'Server URL not defined' };
     try {
       // Получаем манифест с сервера
-      const response = await axios.get('http://192.168.31.96:21010/manifest.json');
+      const response = await axios.get(`${SERVER_URL}/manifest.json`);
       const serverManifest = response.data;
 
       const compareResult = await compareLocalFilesWithManifest(dir, serverManifest);
@@ -188,7 +207,7 @@ app.whenReady().then(() => {
       // Скачиваем файлы
       await Promise.all(
         filesToDownload.map(async (fileName) => {
-          const fileUrl = `http://192.168.31.96:21010/mods/${fileName}`;
+          const fileUrl = `${SERVER_URL}/mods/${fileName}`;
           const filePath = join(dir, fileName);
           const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
           await fs.writeFile(filePath, Buffer.from(response.data));
