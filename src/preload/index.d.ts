@@ -10,6 +10,12 @@ declare global {
         filePath: string
         error: string
       }>
+      syncFiles: (dir: string) => Promise<{
+        success: boolean,
+        downloaded: string[],
+        deleted: string[],
+        error?: string
+      }>
     }
   }
 }

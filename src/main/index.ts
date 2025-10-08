@@ -88,6 +88,8 @@ app.whenReady().then(() => {
       const response = await axios.get('http://192.168.31.96:21010/manifest.json');
       const serverManifest = response.data;
 
+      console.log(serverManifest);
+
       // Читаем локальные файлы
       const localFiles = await fs.readdir(dir, { withFileTypes: true });
       const localManifest = {};
