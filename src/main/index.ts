@@ -11,6 +11,9 @@ function createWindow(): void {
     width: 320,
     height: 460,
     show: false,
+    resizable: false,
+    darkTheme: true,
+    title: 'Updater',
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -32,6 +35,50 @@ function createWindow(): void {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
+  }
+}
+
+async function compareLocalFilesWithManifest(
+  dir,
+  serverManifest
+): Promise<{ success: boolean; filesToDownload: string[]; filesToDelete: string[] } | { error: string }> {
+  try {
+    const localFiles = await fs.readdir(dir, { withFileTypes: true });
+    const localManifest = {};
+
+    // Создаем локальный манифест
+    await Promise.all(
+      localFiles
+        .filter((dirent) => dirent.isFile())
+        .map(async (dirent) => {
+          const filePath = join(dir, dirent.name);
+          const data = await fs.readFile(filePath);
+          localManifest[dirent.name] = crypto.createHash('sha256').update(data).digest('hex');
+        })
+    );
+
+    // Определяем файлы для скачивания и удаления
+    const filesToDownload: string[] = [];
+    const filesToDelete: string[] = [];
+
+    for (const [fileName, serverHash] of Object.entries(serverManifest)) {
+      if (!localManifest[fileName] || localManifest[fileName] !== serverHash) {
+        filesToDownload.push(fileName);
+      }
+    }
+
+    for (const fileName of Object.keys(localManifest)) {
+      if (!serverManifest[fileName]) {
+        filesToDelete.push(fileName);
+      }
+    }
+
+    console.log(`ToDownload: ${filesToDownload.length} | ToDelete: ${filesToDelete.length}`);
+
+    return { success: true, filesToDownload, filesToDelete };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { error: `Failed to compare files: ${message}` };
   }
 }
 
@@ -93,6 +140,32 @@ app.whenReady().then(() => {
     }
   });
 
+  ipcMain.handle('compare-files', async (_event, dir) => {
+    if (!dir) return { error: 'No directory selected' };
+
+    try {
+      const response = await axios.get('http://192.168.31.96:21010/manifest.json');
+      const serverManifest = response.data;
+
+      const compareResult = await compareLocalFilesWithManifest(dir, serverManifest);
+
+      if ('error' in compareResult) {
+        return { error: compareResult.error };
+      }
+
+      const { filesToDownload, filesToDelete } = compareResult;
+
+      return {
+        success: true,
+        toDownload: filesToDownload,
+        toDelete: filesToDelete,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { error: `Failed to sync files: ${message}` };
+    }
+  });
+
   ipcMain.handle('sync-files', async (_event, dir) => {
     if (!dir) return { error: 'No directory selected' };
 
@@ -101,40 +174,16 @@ app.whenReady().then(() => {
       const response = await axios.get('http://192.168.31.96:21010/manifest.json');
       const serverManifest = response.data;
 
-      console.log(serverManifest);
+      const compareResult = await compareLocalFilesWithManifest(dir, serverManifest);
 
-      // Читаем локальные файлы
-      const localFiles = await fs.readdir(dir, { withFileTypes: true });
-      const localManifest = {};
-
-      // Создаем локальный манифест
-      await Promise.all(
-        localFiles
-          .filter((dirent) => dirent.isFile())
-          .map(async (dirent) => {
-            const filePath = join(dir, dirent.name);
-            const data = await fs.readFile(filePath);
-            localManifest[dirent.name] = crypto.createHash('sha256').update(data).digest('hex');
-          })
-      );
-
-      // Определяем файлы для скачивания и удаления
-      const filesToDownload: string[] = [];
-      const filesToDelete: string[] = [];
-
-      // Проверяем, какие файлы нужно скачать
-      for (const [fileName, serverHash] of Object.entries(serverManifest)) {
-        if (!localManifest[fileName] || localManifest[fileName] !== serverHash) {
-          filesToDownload.push(fileName);
-        }
+      if ('error' in compareResult) {
+        return { error: compareResult.error };
       }
 
-      // Проверяем, какие файлы нужно удалить
-      for (const fileName of Object.keys(localManifest)) {
-        if (!serverManifest[fileName]) {
-          filesToDelete.push(fileName);
-        }
-      }
+      const { filesToDownload, filesToDelete } = compareResult;
+
+      console.log('ToDownload: ', filesToDownload.length);
+      console.log('ToDelete: ', filesToDelete.length);
 
       // Скачиваем файлы
       await Promise.all(

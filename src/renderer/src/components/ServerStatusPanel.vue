@@ -1,6 +1,6 @@
 <script lang="ts" setup>
   import { ServerStatus } from '@src/types/Status';
-  import { onMounted, computed, defineProps } from 'vue';
+  import { onMounted, computed } from 'vue';
 
   interface Props {
     status: ServerStatus;
@@ -39,8 +39,11 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    margin-top: 5px;
-    margin-left: 5px;
+    margin: 5px;
+    width: 99vw;
+    background-color: rgba($color: #aaaaaa, $alpha: 0.1);
+    border-radius: 5px;
+    padding: 2px 5px 2px 5px;
 
     &-icon {
       width: 10px;

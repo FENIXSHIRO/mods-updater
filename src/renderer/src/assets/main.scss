@@ -23,9 +23,23 @@ code {
   font-size: 85%;
 }
 
-#app {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  margin-bottom: 80px;
+button {
+  border: none;
+  background-color: #555;
+  padding: 8px;
+  border-radius: 5px;
+  color: white;
+
+  &:hover {
+    background-color: #777;
+    cursor: pointer;
+  }
+
+  &:disabled {
+    background-color: #333333;
+    cursor: default;
+  }
+
+  transition: all;
+  transition-duration: 200ms;
 }
