@@ -47,6 +47,19 @@ app.whenReady().then(() => {
     return filePaths.length ? filePaths[0] : null;
   });
 
+  ipcMain.handle('check-server-availability', async () => {
+    try {
+      const response = await axios.get('http://192.168.31.96:21010', { timeout: 5000 });
+      if (response.status === 200) {
+        return { success: true };
+      }
+      return { success: false };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { error: `Server unavailable: ${message}` };
+    }
+  });
+
   ipcMain.handle('download-manifest', async (_event, dir) => {
     if (!dir) return { error: 'No directory selected' };
 

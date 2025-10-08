@@ -1,21 +1,22 @@
-import { ElectronAPI } from '@electron-toolkit/preload'
+import { ElectronAPI } from '@electron-toolkit/preload';
 
 declare global {
   interface Window {
-    electron: ElectronAPI
+    electron: ElectronAPI;
     api: {
-      selectFolder: () => Promise<string | null>
+      selectFolder: () => Promise<string | null>;
+      checkServerAvailability: () => Promise<{ success: boolean; error?: string }>;
       downloadManifest: (dir: string) => Promise<{
-        success: boolean
-        filePath: string
-        error: string
-      }>
+        success: boolean;
+        filePath: string;
+        error: string;
+      }>;
       syncFiles: (dir: string) => Promise<{
-        success: boolean,
-        downloaded: string[],
-        deleted: string[],
-        error?: string
-      }>
-    }
+        success: boolean;
+        downloaded: string[];
+        deleted: string[];
+        error?: string;
+      }>;
+    };
   }
 }

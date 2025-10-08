@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { Status } from '@src/types/Status.ts'
+  import type { Status } from '@src/types/Status.ts';
 
   defineProps<{
     status: Status;

@@ -1,14 +1,16 @@
 <script setup lang="ts">
   import StatusIcon from './components/StatusIcon.vue';
-  import { ref } from 'vue';
+  import ServerStatusPanel from './components/ServerStatusPanel.vue';
+  import { onMounted, ref } from 'vue';
 
-  import type { Status } from '@src/types/Status.ts'
+  import type { Status, ServerStatus } from '@src/types/Status.ts';
 
   const path = ref<string>();
 
+  const serverStatus = ref<ServerStatus>('pending');
   const status = ref<Status>('updated');
 
-    const selectFolder = async (): Promise<void> => {
+  const selectFolder = async (): Promise<void> => {
     const selectedPath = await window.api.selectFolder();
     if (selectedPath) {
       path.value = selectedPath;
@@ -36,17 +38,23 @@
     const result = await window.api.syncFiles(path.value);
 
     if (result.success) {
-      alert(result.downloaded);
+      alert(result.deleted);
       status.value = 'updated';
     } else {
       alert(result.error || 'Ошибка скачивания');
       status.value = 'needUpdate';
     }
-  }
+  };
+
+  onMounted(async () => {
+    serverStatus.value = (await window.api.checkServerAvailability()).success ? 'online' : 'offline';
+  });
 </script>
 
 <template>
   <div class="">
+    <ServerStatusPanel :status="serverStatus" />
+
     <StatusIcon :status="status" />
 
     <div class="">
@@ -63,3 +71,5 @@
     </div>
   </div>
 </template>
+
+<style></style>
