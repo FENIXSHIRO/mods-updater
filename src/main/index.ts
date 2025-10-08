@@ -3,10 +3,10 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import fs from 'fs/promises';
 import crypto from 'crypto';
+import axios from 'axios';
 import icon from '../../resources/icon.png?asset';
 
 function createWindow(): void {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 320,
     height: 460,
@@ -28,8 +28,6 @@ function createWindow(): void {
     return { action: 'deny' };
   });
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
@@ -37,16 +35,9 @@ function createWindow(): void {
   }
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron');
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window);
   });
@@ -63,7 +54,6 @@ app.whenReady().then(() => {
       const files = await fs.readdir(dir, { withFileTypes: true });
       const manifest = {};
 
-      // Используем Promise.all для параллельного хеширования
       await Promise.all(
         files
           .filter((dirent) => dirent.isFile())
@@ -90,23 +80,85 @@ app.whenReady().then(() => {
     }
   });
 
+  ipcMain.handle('sync-files', async (_event, dir) => {
+    if (!dir) return { error: 'No directory selected' };
+
+    try {
+      // Получаем манифест с сервера
+      const response = await axios.get('http://192.168.31.96:21010/manifest.json');
+      const serverManifest = response.data;
+
+      // Читаем локальные файлы
+      const localFiles = await fs.readdir(dir, { withFileTypes: true });
+      const localManifest = {};
+
+      // Создаем локальный манифест
+      await Promise.all(
+        localFiles
+          .filter((dirent) => dirent.isFile())
+          .map(async (dirent) => {
+            const filePath = join(dir, dirent.name);
+            const data = await fs.readFile(filePath);
+            localManifest[dirent.name] = crypto.createHash('sha256').update(data).digest('hex');
+          })
+      );
+
+      // Определяем файлы для скачивания и удаления
+      const filesToDownload: string[] = [];
+      const filesToDelete: string[] = [];
+
+      // Проверяем, какие файлы нужно скачать
+      for (const [fileName, serverHash] of Object.entries(serverManifest)) {
+        if (!localManifest[fileName] || localManifest[fileName] !== serverHash) {
+          filesToDownload.push(fileName);
+        }
+      }
+
+      // Проверяем, какие файлы нужно удалить
+      for (const fileName of Object.keys(localManifest)) {
+        if (!serverManifest[fileName]) {
+          filesToDelete.push(fileName);
+        }
+      }
+
+      // Скачиваем файлы
+      await Promise.all(
+        filesToDownload.map(async (fileName) => {
+          const fileUrl = `http://192.168.31.96:21010/mods/${fileName}`;
+          const filePath = join(dir, fileName);
+          const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+          await fs.writeFile(filePath, Buffer.from(response.data));
+        })
+      );
+
+      // Удаляем лишние файлы
+      await Promise.all(
+        filesToDelete.map(async (fileName) => {
+          const filePath = join(dir, fileName);
+          await fs.unlink(filePath);
+        })
+      );
+
+      return {
+        success: true,
+        downloaded: filesToDownload,
+        deleted: filesToDelete,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { error: `Failed to sync files: ${message}` };
+    }
+  });
+
   createWindow();
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.

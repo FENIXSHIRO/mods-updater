@@ -3,9 +3,21 @@ import tseslint from '@electron-toolkit/eslint-config-ts';
 import eslintConfigPrettier from '@electron-toolkit/eslint-config-prettier';
 import eslintPluginVue from 'eslint-plugin-vue';
 import vueParser from 'vue-eslint-parser';
+import tsResolver from 'eslint-import-resolver-typescript';
 
 export default defineConfig(
-  { ignores: ['**/node_modules', '**/dist', '**/out'] },
+  {
+    ignores: ['**/node_modules', '**/dist', '**/out'],
+    settings: {
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true, // Учитывать tsconfig.json
+          project: './tsconfig.json', // Путь к вашему tsconfig.json
+        },
+      },
+    },
+  },
+
   tseslint.configs.recommended,
   eslintPluginVue.configs['flat/recommended'],
   {
@@ -67,6 +79,7 @@ export default defineConfig(
       'vue/v-on-handler-style': 'off',
       'vue/valid-define-options': 'error',
       'vue/block-lang': ['error', { script: { lang: 'ts' } }],
+      'import/no-unresolved': ['error', { ignore: ['^@\\/.*$'] }],
     },
   },
   eslintConfigPrettier

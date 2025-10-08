@@ -1,30 +1,38 @@
 <script setup lang="ts">
-import StatusIcon from './components/StatusIcon.vue'
-import { ref } from 'vue'
+  import StatusIcon from './components/StatusIcon.vue';
+  import { ref } from 'vue';
 
-const path = ref<string>()
+  import type { Status } from '@src/types/Status.ts'
 
-const getManifest = async (path: string): Promise<void> => {
-  const result = await window.api.downloadManifest(path)
-  if (result.success) {
-    alert(`Манифест сохранён: ${result.filePath}`)
-  } else {
-    alert(result.error || 'Ошибка скачивания')
-  }
-}
+  const path = ref<string>();
 
-const selectFolder = async (): Promise<void> => {
-  const selectedPath = await window.api.selectFolder()
-  if (selectedPath) {
-    path.value = selectedPath
-    getManifest(selectedPath)
-  }
-}
+  const status = ref<Status>('updated');
+
+  const getManifest = async (): Promise<void> => {
+    if (!path.value) return;
+
+    status.value = 'loading';
+
+    const result = await window.api.downloadManifest(path.value);
+    if (result.success) {
+      status.value = 'updated';
+    } else {
+      alert(result.error || 'Ошибка скачивания');
+      status.value = 'needUpdate';
+    }
+  };
+
+  const selectFolder = async (): Promise<void> => {
+    const selectedPath = await window.api.selectFolder();
+    if (selectedPath) {
+      path.value = selectedPath;
+    }
+  };
 </script>
 
 <template>
   <div class="">
-    <StatusIcon status="loading" />
+    <StatusIcon :status="status" />
 
     <div class="">
       <button type="button" @click="selectFolder">Указать папку</button>
@@ -32,6 +40,7 @@ const selectFolder = async (): Promise<void> => {
 
     <div class="">
       {{ path }}
+      <button type="button" :disabled="!path" @click="getManifest()">Создать манифест файл</button>
     </div>
   </div>
 </template>
