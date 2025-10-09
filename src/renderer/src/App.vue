@@ -112,7 +112,7 @@
   </div>
 
   <div class="">
-    <button type="button" :disabled="!path" @click="syncFiles()">Обновить файлы</button>
+    <button type="button" :disabled="status !== 'needUpdate'" @click="syncFiles()">Обновить файлы</button>
   </div>
 
   <div class="path">
