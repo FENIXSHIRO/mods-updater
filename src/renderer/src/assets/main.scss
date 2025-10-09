@@ -24,7 +24,8 @@ code {
 }
 
 button {
-  border: none;
+  box-sizing: border-box;
+  border: 2px solid transparent;
   background-color: #555;
   padding: 8px;
   border-radius: 5px;
@@ -40,6 +41,10 @@ button {
     cursor: default;
   }
 
-  transition: all;
-  transition-duration: 200ms;
+  &:active:not(:disabled) {
+    background-color: #aaa;
+    border: 2px solid #555;
+  }
+
+  transition: all 200ms;
 }
