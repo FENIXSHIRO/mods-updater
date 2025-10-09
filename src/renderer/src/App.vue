@@ -76,7 +76,7 @@
   <StatusIcon :status="status" />
 
   <div class="options-bar">
-    <OptionsButton @click="selectFolder">
+    <OptionsButton label="Директория с игрой" @click="selectFolder">
       <template #icon>
         <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -93,7 +93,7 @@
       </template>
     </OptionsButton>
 
-    <OptionsButton :disabled="!path" @click="getManifest()">
+    <OptionsButton label="Создать manifest.json" :disabled="!path" @click="getManifest()">
       <template #icon>
         <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
