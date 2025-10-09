@@ -20,7 +20,7 @@
 
 <template>
   <div class="options-button-container">
-    <div class="options-button-label" :class="{ 'is-hovered': isHovered }">
+    <div class="options-button-label" :class="{ 'is-hovered': isHovered, 'is-disabled': disabled }">
       {{ label }}
     </div>
     <button
@@ -60,6 +60,10 @@
         transition: all;
         transition-duration: 600ms;
         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+        &.is-disabled {
+          color: #aaa;
+        }
       }
     }
 
