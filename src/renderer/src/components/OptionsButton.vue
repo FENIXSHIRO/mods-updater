@@ -64,7 +64,10 @@
     }
 
     &-input {
-      padding: 5px;
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       stroke: white;
     }
   }
