@@ -29,7 +29,7 @@
 
 <template>
   <div class="server-status">
-    <div class="server-status-icon" :style="{ backgroundColor: iconColor }" />
+    <div class="server-status-icon" :style="{ borderColor: iconColor }" />
     <div class="server-status-label">{{ statusLabel }}</div>
   </div>
 </template>
@@ -49,6 +49,7 @@
       width: 10px;
       height: 10px;
       border-radius: 15px;
+      border: 1px solid transparent;
     }
 
     &-label {
