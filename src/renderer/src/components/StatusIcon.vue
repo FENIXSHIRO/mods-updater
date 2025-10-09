@@ -51,6 +51,11 @@
     height: 100%;
     margin-top: 40px;
     margin-bottom: 50px;
+
+    background-image: url(../assets/img/l.gif);
+    background-size: cover;
+    background-position: center;
+    border-radius: 100%;
   }
 
   .icon {
@@ -58,7 +63,7 @@
     height: 100px;
     border-radius: 50%;
     border: 4px solid #555555;
-    background-color: rgba(100, 100, 100, 0.5);
+    padding: 2px;
   }
 
   .spinner-idle {
@@ -66,10 +71,6 @@
     border-right: 4px solid #aaaaaa;
     padding: 10px;
     animation: spin 10s linear infinite;
-
-    &.update {
-      border-top-color: #f39c12;
-    }
   }
 
   .spinner-circle {
