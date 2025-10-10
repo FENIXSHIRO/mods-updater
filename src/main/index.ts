@@ -7,21 +7,22 @@ import axios from 'axios';
 import icon from '../../resources/icon.png?asset';
 import devConfig from '../../config.json';
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-async function loadConfig() {
-  if (is.dev) return devConfig;
+import type { Config } from '../types/Config';
+
+async function loadConfig(): Promise<Config> {
+  if (is.dev) return devConfig as unknown as Config;
   try {
     const configPath = join(app.getPath('exe'), '../config.json');
     const configData = await readFile(configPath, 'utf-8');
     return JSON.parse(configData);
   } catch (error) {
     console.error('Failed to load config:', error);
-    return {};
+    throw new Error('Failed to load config');
   }
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-async function saveConfig(config) {
+async function saveConfig(config: Config) {
   try {
     if (is.dev) {
       Object.assign(devConfig, config); // Обновляем devConfig в памяти
@@ -118,6 +119,11 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window);
   });
 
+  ipcMain.handle('get-config', async () => {
+    console.log(config);
+    return config;
+  });
+
   ipcMain.handle('select-folder', async () => {
     const { filePaths } = await dialog.showOpenDialog({ properties: ['openDirectory'] });
     if (filePaths.length) {
@@ -127,11 +133,6 @@ app.whenReady().then(async () => {
       return selectedPath;
     }
     return null;
-  });
-
-  ipcMain.handle('get-game-dir', async () => {
-    console.log(config);
-    return config.GAME_DIR || null;
   });
 
   ipcMain.handle('check-server-availability', async () => {

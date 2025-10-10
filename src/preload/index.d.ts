@@ -1,10 +1,11 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
+import type { Config } from '../types/Config';
 
 declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
-      getGameDir: () => Promise<string | null>;
+      getConfig: () => Promise<Config>;
       selectGameDir: () => Promise<string | null>;
       checkServerAvailability: () => Promise<{ success: boolean; address: string; error?: string }>;
       compareFiles: (dir: string) => Promise<

@@ -5,13 +5,16 @@
 
   import { onMounted, ref } from 'vue';
 
-  import type { Status, ServerStatus } from '@src/types/Status.ts';
+  import type { Status, ServerStatus } from '@src/types/Status';
+  import type { Config } from '@src/types/Config';
 
   const serverStatus = ref<ServerStatus>({
     status: 'pending',
     address: '...',
   });
   const status = ref<Status>('none');
+
+  const config = ref<Config>();
 
   const path = ref<string>();
 
@@ -75,14 +78,16 @@
     };
   };
 
-  onMounted(async () => {
-    await getServerStatus();
+  const getConfig = async (): Promise<void> => {
+    const resultConfig = await window.api.getConfig();
+    console.log(config);
+    config.value = resultConfig;
+    path.value = resultConfig.GAME_DIR;
+  };
 
-    const configPath = await window.api.getGameDir();
-    console.log(configPath);
-    if (configPath) {
-      path.value = configPath;
-    }
+  onMounted(async () => {
+    await getConfig();
+    await getServerStatus();
   });
 </script>
 

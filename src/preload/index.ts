@@ -3,7 +3,7 @@ import { electronAPI } from '@electron-toolkit/preload';
 
 // Custom APIs for renderer
 const api = {
-  getGameDir: () => ipcRenderer.invoke('get-game-dir'),
+  getConfig: () => ipcRenderer.invoke('get-config'),
   selectGameDir: () => ipcRenderer.invoke('select-folder'),
   checkServerAvailability: () => ipcRenderer.invoke('check-server-availability'),
   compareFiles: (dir) => ipcRenderer.invoke('compare-files', dir),
