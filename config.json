@@ -1,5 +1,5 @@
 {
   "MAINTENANCE": false,
   "SERVER_URL": "http://192.168.31.96:21010",
-  "GAME_DIR": ""
+  "GAME_DIR": null
 }

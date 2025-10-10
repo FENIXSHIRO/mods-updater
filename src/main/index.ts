@@ -1,8 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron';
 import { join } from 'path';
-import { readFile } from 'fs/promises';
+import { readFile, writeFile, unlink, readdir } from 'fs/promises';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import fs from 'fs/promises';
 import crypto from 'crypto';
 import axios from 'axios';
 import icon from '../../resources/icon.png?asset';
@@ -12,12 +11,68 @@ import devConfig from '../../config.json';
 async function loadConfig() {
   if (is.dev) return devConfig;
   try {
-    // Путь к config.json относительно portable-исполняемого файла
     const configPath = join(app.getPath('exe'), '../config.json');
     const configData = await readFile(configPath, 'utf-8');
     return JSON.parse(configData);
   } catch (error) {
     console.error('Failed to load config:', error);
+    return {};
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+async function saveConfig(config) {
+  try {
+    if (is.dev) {
+      Object.assign(devConfig, config); // Обновляем devConfig в памяти
+    } else {
+      const configPath = join(app.getPath('exe'), '../config.json');
+      await writeFile(configPath, JSON.stringify(config, null, 2));
+    }
+  } catch (error) {
+    console.error('Failed to save config:', error);
+  }
+}
+
+async function compareLocalFilesWithManifest(
+  dir,
+  serverManifest
+): Promise<{ success: boolean; filesToDownload: string[]; filesToDelete: string[] } | { error: string }> {
+  try {
+    const localFiles = await readdir(dir, { withFileTypes: true });
+    const localManifest = {};
+
+    await Promise.all(
+      localFiles
+        .filter((dirent) => dirent.isFile())
+        .map(async (dirent) => {
+          const filePath = join(dir, dirent.name);
+          const data = await readFile(filePath);
+          localManifest[dirent.name] = crypto.createHash('sha256').update(data).digest('hex');
+        })
+    );
+
+    const filesToDownload: string[] = [];
+    const filesToDelete: string[] = [];
+
+    for (const [fileName, serverHash] of Object.entries(serverManifest)) {
+      if (!localManifest[fileName] || localManifest[fileName] !== serverHash) {
+        filesToDownload.push(fileName);
+      }
+    }
+
+    for (const fileName of Object.keys(localManifest)) {
+      if (!serverManifest[fileName]) {
+        filesToDelete.push(fileName);
+      }
+    }
+
+    console.log(`ToDownload: ${filesToDownload.length} | ToDelete: ${filesToDelete.length}`);
+
+    return { success: true, filesToDownload, filesToDelete };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { error: `Failed to compare files: ${message}` };
   }
 }
 
@@ -53,50 +108,6 @@ function createWindow(): void {
   }
 }
 
-async function compareLocalFilesWithManifest(
-  dir,
-  serverManifest
-): Promise<{ success: boolean; filesToDownload: string[]; filesToDelete: string[] } | { error: string }> {
-  try {
-    const localFiles = await fs.readdir(dir, { withFileTypes: true });
-    const localManifest = {};
-
-    // Создаем локальный манифест
-    await Promise.all(
-      localFiles
-        .filter((dirent) => dirent.isFile())
-        .map(async (dirent) => {
-          const filePath = join(dir, dirent.name);
-          const data = await fs.readFile(filePath);
-          localManifest[dirent.name] = crypto.createHash('sha256').update(data).digest('hex');
-        })
-    );
-
-    // Определяем файлы для скачивания и удаления
-    const filesToDownload: string[] = [];
-    const filesToDelete: string[] = [];
-
-    for (const [fileName, serverHash] of Object.entries(serverManifest)) {
-      if (!localManifest[fileName] || localManifest[fileName] !== serverHash) {
-        filesToDownload.push(fileName);
-      }
-    }
-
-    for (const fileName of Object.keys(localManifest)) {
-      if (!serverManifest[fileName]) {
-        filesToDelete.push(fileName);
-      }
-    }
-
-    console.log(`ToDownload: ${filesToDownload.length} | ToDelete: ${filesToDelete.length}`);
-
-    return { success: true, filesToDownload, filesToDelete };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return { error: `Failed to compare files: ${message}` };
-  }
-}
-
 app.whenReady().then(async () => {
   const config = await loadConfig();
   const SERVER_URL = config.SERVER_URL;
@@ -109,7 +120,18 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('select-folder', async () => {
     const { filePaths } = await dialog.showOpenDialog({ properties: ['openDirectory'] });
-    return filePaths.length ? filePaths[0] : null;
+    if (filePaths.length) {
+      const selectedPath = filePaths[0];
+      config.GAME_DIR = selectedPath;
+      await saveConfig(config);
+      return selectedPath;
+    }
+    return null;
+  });
+
+  ipcMain.handle('get-game-dir', async () => {
+    console.log(config);
+    return config.GAME_DIR || null;
   });
 
   ipcMain.handle('check-server-availability', async () => {
@@ -130,7 +152,7 @@ app.whenReady().then(async () => {
     if (!dir) return { error: 'No directory selected' };
 
     try {
-      const files = await fs.readdir(dir, { withFileTypes: true });
+      const files = await readdir(dir, { withFileTypes: true });
       const manifest = {};
 
       await Promise.all(
@@ -138,7 +160,7 @@ app.whenReady().then(async () => {
           .filter((dirent) => dirent.isFile())
           .map(async (dirent) => {
             const filePath = `${dir}/${dirent.name}`;
-            const data = await fs.readFile(filePath);
+            const data = await readFile(filePath);
             manifest[dirent.name] = crypto.createHash('sha256').update(data).digest('hex');
           })
       );
@@ -149,7 +171,7 @@ app.whenReady().then(async () => {
       });
 
       if (filePath) {
-        await fs.writeFile(filePath, JSON.stringify(manifest, null, 2));
+        await writeFile(filePath, JSON.stringify(manifest, null, 2));
         return { success: true, filePath };
       }
       return { error: 'Download cancelled' };
@@ -189,7 +211,6 @@ app.whenReady().then(async () => {
     if (!dir) return { error: 'No directory selected' };
     if (!SERVER_URL) return { error: 'Server URL not defined' };
     try {
-      // Получаем манифест с сервера
       const response = await axios.get(`${SERVER_URL}/manifest.json`);
       const serverManifest = response.data;
 
@@ -204,21 +225,19 @@ app.whenReady().then(async () => {
       console.log('ToDownload: ', filesToDownload.length);
       console.log('ToDelete: ', filesToDelete.length);
 
-      // Скачиваем файлы
       await Promise.all(
         filesToDownload.map(async (fileName) => {
           const fileUrl = `${SERVER_URL}/mods/${fileName}`;
           const filePath = join(dir, fileName);
           const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
-          await fs.writeFile(filePath, Buffer.from(response.data));
+          await writeFile(filePath, Buffer.from(response.data));
         })
       );
 
-      // Удаляем лишние файлы
       await Promise.all(
         filesToDelete.map(async (fileName) => {
           const filePath = join(dir, fileName);
-          await fs.unlink(filePath);
+          await unlink(filePath);
         })
       );
 

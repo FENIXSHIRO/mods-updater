@@ -4,7 +4,8 @@ declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
-      selectFolder: () => Promise<string | null>;
+      getGameDir: () => Promise<string | null>;
+      selectGameDir: () => Promise<string | null>;
       checkServerAvailability: () => Promise<{ success: boolean; address: string; error?: string }>;
       compareFiles: (dir: string) => Promise<
         | {

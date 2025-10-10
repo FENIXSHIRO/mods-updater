@@ -31,7 +31,7 @@
   };
 
   const selectFolder = async (): Promise<void> => {
-    const selectedPath = await window.api.selectFolder();
+    const selectedPath = await window.api.selectGameDir();
     if (selectedPath) {
       path.value = selectedPath;
       compareWithServer(selectedPath);
@@ -77,6 +77,12 @@
 
   onMounted(async () => {
     await getServerStatus();
+
+    const configPath = await window.api.getGameDir();
+    console.log(configPath);
+    if (configPath) {
+      path.value = configPath;
+    }
   });
 </script>
 
