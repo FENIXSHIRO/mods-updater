@@ -6,10 +6,11 @@ import fs from 'fs/promises';
 import crypto from 'crypto';
 import axios from 'axios';
 import icon from '../../resources/icon.png?asset';
+import devConfig from '../../config.json';
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 async function loadConfig() {
-  if (is.dev) return { SERVER_URL: 'http://192.168.31.96:21010' };
+  if (is.dev) return devConfig;
   try {
     // Путь к config.json относительно portable-исполняемого файла
     const configPath = join(app.getPath('exe'), '../config.json');
@@ -17,7 +18,6 @@ async function loadConfig() {
     return JSON.parse(configData);
   } catch (error) {
     console.error('Failed to load config:', error);
-    return { SERVER_URL: '' }; // Резервное значение
   }
 }
 
