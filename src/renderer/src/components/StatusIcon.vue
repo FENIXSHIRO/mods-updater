@@ -52,7 +52,7 @@
     margin-top: 40px;
     margin-bottom: 50px;
 
-    background-image: url(../assets/img/l.gif);
+    // background-image: url(../assets/img/l.gif);
     background-size: cover;
     background-position: center;
     border-radius: 100%;

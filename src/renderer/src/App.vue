@@ -7,7 +7,10 @@
 
   import type { Status, ServerStatus } from '@src/types/Status.ts';
 
-  const serverStatus = ref<ServerStatus>('pending');
+  const serverStatus = ref<ServerStatus>({
+    status: 'pending',
+    address: '...',
+  });
   const status = ref<Status>('none');
 
   const path = ref<string>();
@@ -64,14 +67,21 @@
     }
   };
 
-  onMounted(async () => {
+  const getServerStatus = async (): Promise<void> => {
     const result = await window.api.checkServerAvailability();
-    serverStatus.value = 'success' in result && result.success ? 'online' : 'offline';
+    serverStatus.value = {
+      status: result.success ? 'online' : 'offline',
+      address: result.address,
+    };
+  };
+
+  onMounted(async () => {
+    await getServerStatus();
   });
 </script>
 
 <template>
-  <ServerStatusPanel :status="serverStatus" />
+  <ServerStatusPanel :server-status="serverStatus" />
 
   <StatusIcon :status="status" />
 

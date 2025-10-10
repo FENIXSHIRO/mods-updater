@@ -117,12 +117,12 @@ app.whenReady().then(async () => {
     try {
       const response = await axios.get(SERVER_URL, { timeout: 5000 });
       if (response.status === 200) {
-        return { success: true };
+        return { success: true, address: SERVER_URL };
       }
-      return { success: false };
+      return { success: false, address: SERVER_URL };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return { error: `Server unavailable: ${message}` };
+      return { success: false, address: SERVER_URL, error: `Server unavailable: ${message}` };
     }
   });
 

@@ -5,7 +5,7 @@ declare global {
     electron: ElectronAPI;
     api: {
       selectFolder: () => Promise<string | null>;
-      checkServerAvailability: () => Promise<{ success: boolean } | { error: string }>;
+      checkServerAvailability: () => Promise<{ success: boolean; address: string; error?: string }>;
       compareFiles: (dir: string) => Promise<
         | {
             success: boolean;
