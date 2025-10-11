@@ -4,6 +4,14 @@
   defineProps<{
     status: Status;
   }>();
+
+  const statusLabels = {
+    needUpdate: 'Есть обновления',
+    loading: 'Загрузка обновлений',
+    updated: 'Обновлено',
+    error: 'Ошибка',
+    none: 'Конфиг не настроен',
+  };
 </script>
 
 <template>
@@ -15,7 +23,7 @@
       <div v-else-if="status === 'updated'" class="icon updated"></div>
     </div>
 
-    <div class="">{{ status }}</div>
+    <div class="">{{ statusLabels[status] }}</div>
   </div>
 </template>
 
@@ -25,8 +33,8 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin-top: 40px;
-    margin-bottom: 50px;
+    margin-top: 20px;
+    margin-bottom: 15px;
   }
 
   .spinner {

@@ -78,7 +78,7 @@
     const result = await window.api.syncFiles(path.value);
 
     if ('success' in result && result.success) {
-      alert(result.deleted);
+      updated.value = result;
       status.value = 'updated';
     } else {
       alert('error' in result ? result.error : 'Ошибка скачивания');
