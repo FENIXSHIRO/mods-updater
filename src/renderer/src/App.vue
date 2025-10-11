@@ -98,12 +98,12 @@
     const resultConfig = await window.api.getConfig();
     console.log(config);
     config.value = resultConfig;
-    path.value = resultConfig.GAME_DIR;
+    path.value = resultConfig.MODS_DIR;
   };
 
   const init = async (): Promise<void> => {
-    if (config.value?.GAME_DIR) {
-      const result = await compareWithServer(config.value.GAME_DIR);
+    if (config.value?.MODS_DIR) {
+      const result = await compareWithServer(config.value.MODS_DIR);
       forUpdate.value.toDownload = result.toDownload;
       forUpdate.value.toDelete = result.toDelete;
       console.log(forUpdate.value);
@@ -123,7 +123,7 @@
   <StatusIcon :status="status" />
 
   <div class="options-bar">
-    <OptionsButton label="Директория с игрой" @click="selectFolder">
+    <OptionsButton label="Папка с модами" :highlight="!config?.MODS_DIR" @click="selectFolder">
       <template #icon>
         <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -140,7 +140,7 @@
       </template>
     </OptionsButton>
 
-    <OptionsButton :disabled="!config?.GAME_DIR" label="Проверить файлы" @click="compareWithServer(config!.GAME_DIR)">
+    <OptionsButton :disabled="!config?.MODS_DIR" label="Проверить файлы" @click="compareWithServer(config!.MODS_DIR)">
       <template #icon>
         <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>

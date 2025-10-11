@@ -128,7 +128,7 @@ app.whenReady().then(async () => {
     const { filePaths } = await dialog.showOpenDialog({ properties: ['openDirectory'] });
     if (filePaths.length) {
       const selectedPath = filePaths[0];
-      config.GAME_DIR = selectedPath;
+      config.MODS_DIR = selectedPath;
       await saveConfig(config);
       return selectedPath;
     }

@@ -4,6 +4,7 @@
   interface Props {
     disabled?: boolean;
     label: string;
+    highlight?: boolean;
   }
 
   const props = defineProps<Props>();
@@ -26,6 +27,7 @@
     <button
       type="button"
       class="options-button-input"
+      :class="{ highlight: highlight }"
       :disabled="props.disabled"
       @click="handleClick"
       @mouseenter="isHovered = true"
@@ -37,6 +39,10 @@
 </template>
 
 <style lang="scss" scoped>
+  .highlight {
+    border-color: #f39c12;
+  }
+
   .options-button {
     &-container {
       display: flex;
@@ -55,7 +61,7 @@
 
       &.is-hovered {
         color: white;
-        background-color: rgba($color: #555, $alpha: 0.3);
+        background-color: rgba($color: #555, $alpha: 0.9);
 
         transition: all;
         transition-duration: 600ms;

@@ -54,12 +54,13 @@
 
 <style scoped lang="scss">
   .drawer {
-    padding: 10px;
+    margin-top: 15px;
+    padding: 0px 10px;
+    background-color: rgba($color: #555, $alpha: 0.2);
   }
 
   .updated {
     display: flex;
-    padding: 0px 10px;
     gap: 10px;
     font-size: 12px;
     color: #666;
