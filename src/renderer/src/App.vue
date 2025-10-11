@@ -33,6 +33,14 @@
     toDelete: [],
   });
 
+  const statusLabels = {
+    needUpdate: 'Обновить',
+    loading: 'Загрузка обновлений',
+    updated: 'Обновлено',
+    error: 'Ошибка',
+    none: 'Конфиг не настроен',
+  };
+
   const compareWithServer = async (dir: string): Promise<{ toDownload: string[]; toDelete: string[] }> => {
     const checkResult = await window.api.compareFiles(dir);
     if ('success' in checkResult) {
@@ -182,7 +190,7 @@
   </div>
 
   <div class="">
-    <button type="button" :disabled="status !== 'needUpdate'" @click="syncFiles()">Обновить файлы</button>
+    <button type="button" :disabled="status !== 'needUpdate'" @click="syncFiles()">{{ statusLabels[status] }}</button>
   </div>
 
   <StateDrawer :status="status" :for-update="forUpdate" :updated="updated" />

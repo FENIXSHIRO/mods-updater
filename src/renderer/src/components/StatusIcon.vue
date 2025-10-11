@@ -5,14 +5,6 @@
     status: Status;
   }>();
 
-  const statusLabels = {
-    needUpdate: 'Есть обновления',
-    loading: 'Загрузка обновлений',
-    updated: 'Обновлено',
-    error: 'Ошибка',
-    none: 'Конфиг не настроен',
-  };
-
   const statusesWithGif = ['loading', 'updated'];
 </script>
 
@@ -24,8 +16,6 @@
       <div v-else-if="status === 'needUpdate'" class="icon need-update"></div>
       <div v-else-if="status === 'updated'" class="icon updated"></div>
     </div>
-
-    <div class="">{{ statusLabels[status] }}</div>
   </div>
 </template>
 
