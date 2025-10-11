@@ -17,7 +17,7 @@
 
 <template>
   <div class="drawer">
-    <div v-if="forUpdate.toDownload.length || forUpdate.toDelete.length" class="update-list">
+    <div v-if="props.forUpdate.toDownload.length || forUpdate.toDelete.length" class="update-list">
       <div class="update-list-item-container">
         <div v-for="downloadItem in forUpdate.toDownload" :key="downloadItem" class="update-list-item">
           <span class="item-new">+</span>
