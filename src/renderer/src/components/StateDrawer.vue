@@ -28,6 +28,8 @@
         </div>
       </div>
 
+      <div v-if="forUpdate.toDownload.length && forUpdate.toDelete.length" class="divider" />
+
       <div class="update-list-item-container">
         <div v-if="forUpdate.toDelete.length" class="update-list-header">
           К Удалению <span class="update-list-header-count">({{ forUpdate.toDelete.length }}):</span>
@@ -39,7 +41,7 @@
       </div>
     </div>
 
-    <div v-else-if="updated.downloaded.length || updated.deleted.length" class="updated">
+    <div v-if="updated.downloaded.length || updated.deleted.length" class="updated">
       <div class="">
         <span>Скачано:</span>
         {{ updated.downloaded.length }}
@@ -56,6 +58,12 @@
   .drawer {
     margin-top: 15px;
     padding: 0px 10px;
+    background-color: rgba($color: #555, $alpha: 0.2);
+  }
+
+  .divider {
+    height: 1px;
+    width: 100%;
     background-color: rgba($color: #555, $alpha: 0.2);
   }
 

@@ -12,11 +12,13 @@
     error: 'Ошибка',
     none: 'Конфиг не настроен',
   };
+
+  const statusesWithGif = ['loading', 'updated'];
 </script>
 
 <template>
   <div class="status-container">
-    <div class="spinner">
+    <div class="spinner" :class="{ gif: statusesWithGif.includes(status) }">
       <div v-if="status === 'none'" class="icon spinner-idle"></div>
       <div v-if="status === 'loading'" class="icon spinner-circle"></div>
       <div v-else-if="status === 'needUpdate'" class="icon need-update"></div>
@@ -37,13 +39,16 @@
     margin-bottom: 15px;
   }
 
+  .gif {
+    background-image: url(../assets/img/l.gif);
+  }
+
   .spinner {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100%;
 
-    background-image: url(../assets/img/l.gif);
     background-size: cover;
     background-position: center;
     border-radius: 100%;

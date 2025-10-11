@@ -53,7 +53,7 @@
 <style lang="scss">
   .server-status {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     margin: 5px;
     width: 99vw;

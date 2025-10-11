@@ -48,6 +48,13 @@
     return { toDownload: [], toDelete: [] };
   };
 
+  const refreshFilesInfo = async (): Promise<void> => {
+    if (!config.value?.MODS_DIR) return;
+    const result = await compareWithServer(config.value.MODS_DIR);
+    forUpdate.value = result;
+    updated.value = { downloaded: [], deleted: [] };
+  };
+
   const selectFolder = async (): Promise<void> => {
     const selectedPath = await window.api.selectGameDir();
     if (selectedPath) {
@@ -104,8 +111,7 @@
   const init = async (): Promise<void> => {
     if (config.value?.MODS_DIR) {
       const result = await compareWithServer(config.value.MODS_DIR);
-      forUpdate.value.toDownload = result.toDownload;
-      forUpdate.value.toDelete = result.toDelete;
+      forUpdate.value = result;
       console.log(forUpdate.value);
     }
   };
@@ -140,7 +146,7 @@
       </template>
     </OptionsButton>
 
-    <OptionsButton :disabled="!config?.MODS_DIR" label="Проверить файлы" @click="compareWithServer(config!.MODS_DIR)">
+    <OptionsButton :disabled="!config?.MODS_DIR" label="Проверить файлы" @click="refreshFilesInfo">
       <template #icon>
         <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
