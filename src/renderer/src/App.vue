@@ -2,6 +2,7 @@
   import StatusIcon from './components/StatusIcon.vue';
   import ServerStatusPanel from './components/ServerStatusPanel.vue';
   import OptionsButton from './components/OptionsButton.vue';
+  import StateDrawer from './components/StateDrawer.vue';
 
   import { onMounted, ref } from 'vue';
 
@@ -13,10 +14,24 @@
     address: '...',
   });
   const status = ref<Status>('none');
-
   const config = ref<Config>();
-
   const path = ref<string>();
+
+  const updated = ref<{
+    downloaded: string[];
+    deleted: string[];
+  }>({
+    downloaded: [],
+    deleted: [],
+  });
+
+  const forUpdate = ref<{
+    toDownload: string[];
+    toDelete: string[];
+  }>({
+    toDownload: [],
+    toDelete: [],
+  });
 
   const compareWithServer = async (dir: string): Promise<{ toDownload: string[]; toDelete: string[] }> => {
     const checkResult = await window.api.compareFiles(dir);
@@ -37,7 +52,7 @@
     const selectedPath = await window.api.selectGameDir();
     if (selectedPath) {
       path.value = selectedPath;
-      compareWithServer(selectedPath);
+      forUpdate.value = await compareWithServer(selectedPath);
     }
   };
 
@@ -85,9 +100,19 @@
     path.value = resultConfig.GAME_DIR;
   };
 
+  const init = async (): Promise<void> => {
+    if (config.value?.GAME_DIR) {
+      const result = await compareWithServer(config.value.GAME_DIR);
+      forUpdate.value.toDownload = result.toDownload;
+      forUpdate.value.toDelete = result.toDelete;
+      console.log(forUpdate.value);
+    }
+  };
+
   onMounted(async () => {
     await getConfig();
     await getServerStatus();
+    await init();
   });
 </script>
 
@@ -135,6 +160,8 @@
   <div class="">
     <button type="button" :disabled="status !== 'needUpdate'" @click="syncFiles()">Обновить файлы</button>
   </div>
+
+  <StateDrawer :status="status" :for-update="forUpdate" :updated="updated" />
 
   <div class="path">
     {{ path }}

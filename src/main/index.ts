@@ -186,7 +186,7 @@ app.whenReady().then(async () => {
     if (!dir) return { error: 'No directory selected' };
     if (!SERVER_URL) return { error: 'Server URL not defined' };
     try {
-      const response = await axios.get(`${SERVER_URL}/manifest.json`);
+      const response = await axios.get(`${SERVER_URL}/mods_manifest/manifest.json`);
       const serverManifest = response.data;
 
       const compareResult = await compareLocalFilesWithManifest(dir, serverManifest);
@@ -212,7 +212,7 @@ app.whenReady().then(async () => {
     if (!dir) return { error: 'No directory selected' };
     if (!SERVER_URL) return { error: 'Server URL not defined' };
     try {
-      const response = await axios.get(`${SERVER_URL}/manifest.json`);
+      const response = await axios.get(`${SERVER_URL}/mods_manifest/manifest.json`);
       const serverManifest = response.data;
 
       const compareResult = await compareLocalFilesWithManifest(dir, serverManifest);
