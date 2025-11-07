@@ -66,6 +66,11 @@
   const selectFolder = async (): Promise<void> => {
     const selectedPath = await window.api.selectGameDir();
     if (selectedPath) {
+      if (!selectedPath.endsWith('mods')) {
+        alert('Это не папка с модами!');
+        return;
+      }
+
       path.value = selectedPath;
       forUpdate.value = await compareWithServer(selectedPath);
       await getConfig();

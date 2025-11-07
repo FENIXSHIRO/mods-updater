@@ -4,7 +4,6 @@ import { readFile, writeFile, unlink, readdir } from 'fs/promises';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import crypto from 'crypto';
 import axios from 'axios';
-import icon from '../../resources/icon.png?asset';
 import devConfig from '../../config.json';
 
 import type { Config } from '../types/Config';
@@ -86,7 +85,7 @@ function createWindow(): void {
     darkTheme: true,
     title: 'Updater',
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon: join(__dirname, '../../resources/icon.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
